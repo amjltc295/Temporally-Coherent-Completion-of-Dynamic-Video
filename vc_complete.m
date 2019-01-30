@@ -17,9 +17,11 @@ close all;
 % dbstop if error
 
 % Temporary inputs
-videoName = 'davis_bmx-trees';
+% videoName = '003234408d';
+% videoName = 'davis_bmx-trees';
 
-videoExt  = 'avi';
+videoExt  = 'mp4';
+% videoExt  = 'avi';
 
 fprintf('Process video %s \n', videoName);
 
@@ -33,10 +35,18 @@ opt = vc_init_opt(videoName);
 % =========================================================================
 % Start and end frame
 frameInd.start = 1;
-frameInd.end   = 5;
+frameInd.end   = 15;
 
 % Load input video and holeMask
 [videoColor, holeMask, loadFlag] = vc_load_input_data(videoName, videoExt, frameInd);
+
+video_len = size(videoColor)
+mask_len = size(holeMask)
+len = min(video_len(4), mask_len(3))
+videoColor = videoColor(:, :, :, 1:len);
+holeMask = holeMask(:, :, 1:len);
+
+holeMask = 1 - holeMask;
 
 videoColor = im2single(videoColor);
 
@@ -134,6 +144,8 @@ cRange = round(1:imgW);
 videoColor = videoColor(rRange,cRange,:,:);
 
 % Hole mask original
+% fprintf('W: %i\n', imgW);
+% fprintf('H: %i\n', imgH);
 holeMask  = holeMask(rRange,cRange, :);
 
 % Selecting a few frames

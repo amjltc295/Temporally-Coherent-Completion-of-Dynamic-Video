@@ -58,13 +58,15 @@ startFrame = frameInd.start;
 endFrame   = startFrame + videoSize(3) - 1;
 
 % File name of the hole mask
-holeFileNameVideo = [videoName, '_hole.avi'];
+holeFileNameVideo = [videoName, '_hole.mp4'];
+% holeFileNameVideo = [videoName, '_hole.avi'];
 holeFileNameImg   = [videoName, '_hole.png'];
 
 if(exist(fullfile(holePath, holeFileNameVideo), 'file'))
     % holeMask provided by a video
     vidObj = VideoReader(fullfile(holePath, holeFileNameVideo));
-    holeMask = read(vidObj, [startFrame, endFrame]);
+    holeMask = read(vidObj, [startFrame, Inf]);
+    % holeMask = read(vidObj, [startFrame, endFrame]);
     if(ndims(holeMask)==4) % Remove the color channel
         holeMask = squeeze(holeMask(:,:,1,:));
     end
