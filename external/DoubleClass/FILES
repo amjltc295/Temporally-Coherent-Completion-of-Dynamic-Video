@@ -1,0 +1,155 @@
+Optimized double class functions for MATLAB on x86 computers.
+Copyright © Marcel Leutenegger, 2003-2008, École Polytechnique Fédérale de Lausanne (EPFL),
+Laboratoire d'Optique Biomédicale (LOB), BM - Station 17, 1015 Lausanne, Switzerland.
+
+    This library is free software; you can redistribute it and/or modify it under
+    the terms of the GNU Lesser General Public License as published by the Free
+    Software Foundation; version 2.1 of the License.
+
+    This library is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+    PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License along
+    with this library; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+Files in original package
+|   AUTHORS				Authors and copyright notice
+|   COPYING				GNU Lesser General Public License
+|   FILES				This file listing
+|   Implementation.pdf			Implementation details
+|   Implementation.tex			LaTeX source
+|   README				Introduction
+|
++---@double				MEX files (Windows 32bit)
+|       abs.dll
+|       acos.dll
+|       acosh.dll
+|       angle.dll
+|       asin.dll
+|       asinh.dll
+|       atan.dll
+|       atan2.dll
+|       atanh.dll
+|       ceil.dll
+|       cis.dll
+|       cis.m
+|       complex.dll
+|       cos.dll
+|       cosh.dll
+|       cot.m
+|       coth.m
+|       exp.dll
+|       fix.dll
+|       floor.dll
+|       log.dll
+|       log10.dll
+|       log2.dll
+|       mod.dll
+|       mtimes.dll			Matrix product using SSE2 instructions
+|       pow2.dll
+|       power.m
+|       rem.dll
+|       round.dll
+|       sign.dll
+|       sin.dll
+|       sinh.dll
+|       sqrt.dll
+|       tan.dll
+|       tanh.dll
+|       xor.dll
+|       xur.dll
+|
++---matlab				MATLAB scripts for compiling and testing
+|   |   benchmark.m
+|   |   benchMtimes.m
+|   |   compare.m
+|   |   mexmake.m			MEX-Maker for batch compilation
+|   |   Pentium4m2GHz.mat		Example benchmark data
+|   |   testElementary.m
+|   |   testMtimes.m
+|   |
+|   \---@double				High-resolution timer for benchmarking
+|           ftimer.asm
+|           timer.c
+|           timer.dll
+|           timer.m
+|           version.mat			Compilation information for 'mexmake'
+|
+\---source				C and Assembler source files
+    |   abs.c
+    |   acos.c
+    |   acosh.c
+    |   angle.c
+    |   asin.c
+    |   asinh.c
+    |   atan.c
+    |   atan2.c
+    |   atanh.c
+    |   ceil.c
+    |   cis.c
+    |   complex.c
+    |   cos.c
+    |   cosh.c
+    |   exp.c
+    |   fabs.asm
+    |   facos.asm
+    |   facosh.asm
+    |   fangle.asm
+    |   fasin.asm
+    |   fasinh.asm
+    |   fatan.asm
+    |   fatan2.asm
+    |   fatanh.asm
+    |   fceil.asm
+    |   fcis.asm
+    |   fcomplex.asm
+    |   fcos.asm
+    |   fcosh.asm
+    |   fdim.asm			Compare matrix dimensions
+    |   fexp.asm
+    |   ffix.asm
+    |   ffloor.asm
+    |   fix.c
+    |   flog.asm
+    |   flog10.asm
+    |   flog2.asm
+    |   floor.c
+    |   fmod.asm
+    |   fpow2.asm
+    |   frem.asm
+    |   fround.asm
+    |   fsign.asm
+    |   fsin.asm
+    |   fsinh.asm
+    |   fsqrt.asm
+    |   ftan.asm
+    |   ftanh.asm
+    |   fxor.asm
+    |   fxur.asm
+    |   log.c
+    |   log10.c
+    |   log2.c
+    |   mod.c
+    |   pow2.c
+    |   rem.c
+    |   rexp.asm
+    |   round.c
+    |   sign.c
+    |   sin.c
+    |   sinh.c
+    |   sqrt.c
+    |   tan.c
+    |   tanh.c
+    |   version.mat			Compilation information for 'mexmake'
+    |   xor.c
+    |   xur.c
+    |
+    \---sse2				Matrix product using SSE2 instructions
+            fmalign.asm
+            fmblock.asm
+            fmstore.asm
+            fmtimes.asm
+            mtimes.c

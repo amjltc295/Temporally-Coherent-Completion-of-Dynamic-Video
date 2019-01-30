@@ -1,0 +1,203 @@
+
+				     MATLAB toolbox
+		________________________________________________________
+
+		     Elementary functions: double precision class
+		________________________________________________________
+
+
+** Contents
+
+	1. Introduction
+	2. Requirements
+	3. Installation
+	4. Comments
+	5. Copyright
+	6. Warranty
+	7. History
+	8. Download
+	9. Trademarks
+
+** Publisher
+
+	Marcel Leutenegger		marcel.leutenegger@a3.epfl.ch
+	MPI for Biophysical Chemistry
+	NanoBiophotonics
+	Am Fassberg 11			Phone:	+49 551 201 2516
+	DE-37077 Göttingen
+
+
+
+1. Introduction
+
+	The performance of elementary MATLAB functions as rounding, transcendentals,
+	exponential, logarithm and square root can be significantly improved using
+	these assember subroutines executing with full floating-point performance on
+	any Intel Pentium II+ or compatible system. On Pentium 4 processors, the
+	average performance is two to five times better than with the MATLAB built-
+	in functions.
+
+
+2. Requirements
+
+	• An Intel-based computer architecture with an Pentium II or better processor.
+	• MATLAB 6.0 or newer running.
+	• Need for speed.
+
+
+3. Installation
+
+	Unpack the folder '@double' from the archive.
+
+	      •	The subfolder '@double' contains libraries that directly overload the
+		built-in functions. This has the advantage, that existing MATLAB code
+		automatically benefits from the increased performance.
+		 If '@double' is in a folder in your MATLAB path, all MATLAB functions
+		benefit. If it is in a 'private' project folder, the project functions
+		benefit. It is save to use only a subset of the class functions.
+		 Just say "builtin(func,arguments)" to call the original version of
+		'func'. Please note that this works only for built-in functions - this
+		means that "which func" reports "func is a built-in function".
+
+	      •	You may rename the functions 'func' into 'ffunc'. Existing MATLAB code
+		will work with the built-in functions unless you call 'ffunc'.
+
+	If you work with MATLAB R13 or newer, you may replace 'xor.dll' by 'xur.dll'
+	for matching the representation of logical values ('uint8').
+
+
+4. Comments
+
+	The libraries should always reside in a subfolder called '@double' to make sure
+	they are not called for any data except of type 'double'. They do not check the
+	data type of input arguments, because 'double' is the default precision.
+
+	Due to the overhead for calling external functions, the built-in functions work
+	faster if called for matrices with less than about 4 to 8 elements. Therefore,
+	if you know the size of your matrix, you can choose the appropriate function,
+	i.e. by selecting an appropriate subset of the class functions.
+
+	The functions 'angle', 'mod' and 'xor' are not built-in but MATLAB scripts.
+	Therefore, the functions within this package work much faster in any case.
+
+	The function 'xur' is an even faster version of 'xor'. It can be used in any
+	situation where its output, a logical (boolean) 'uint8' matrix, will not be
+	transformed to 'double' for computation. It serves in particular as a value
+	selector in a statement like "values=matrix(xur(a,b))".
+
+   Accuracy
+
+	The results of the external functions slightly differ from the built-in functions.
+	The accuracy of the external functions benefits from the floating-point registers
+	with a 64bit mantissa on Intel processors. Intermediate values are kept in floa-
+	ting-point registers such that rounding takes place mostly once - when writing
+	the result into the output matrix with a 53bit mantissa.
+
+	In general, a statement of "inverseFunction(function(value))" produces "value"
+	with a relative error of less than 1e-13. The roundoff error of about 1.1e-16
+	leads to relatively important deviations in exponentiation. Note also that in
+	particular addition/subtraction in the argument of a logarithm are critical
+	operations due to a relative amplification of the rounding error. The logarithm
+	itself works accurate over the full complex plane R x iR. For the sake of per-
+	formance, the inverse transcendental functions are currently not implemented in
+	that way. See also the implementation details in "Implementation.pdf".
+
+   Transcendental functions: pi
+
+	An exception is made for every periodic transcendental function, where the constant
+	2*pi is truncated to a 53bit mantissa. This guarantees that a statement of the
+	form "sin(x)" with real 'x' always produces the expected value "sin(rem(x,2*pi))"
+	at the same accuracy. The reminder is computed internaly and prescaled to a 64bit
+	mantissa.
+
+	Example 1:
+
+		x=pow2(pi,0:256);
+		plot(x,builtin('sin',x),'r',x,sin(x),'b');
+		set(gca,'XScale','log');
+
+
+5. Copyright
+
+	Copyright © Marcel Leutenegger, 2003-2007, École Polytechnique Fédérale de Lausanne (EPFL),
+	Laboratoire d'Optique Biomédicale (LOB), BM - Station 17, 1015 Lausanne, Switzerland.
+
+	    This library is free software; you can redistribute it and/or modify it under
+	    the terms of the GNU Lesser General Public License as published by the Free
+	    Software Foundation; version 2.1 of the License.
+
+	    This library is distributed in the hope that it will be useful, but WITHOUT ANY
+	    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+	    PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+
+	    You should have received a copy of the GNU Lesser General Public License along
+	    with this library; if not, write to the Free Software Foundation, Inc.,
+	    51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+	See 'FILES' for a list of the original package contents.
+
+
+6. Warranty
+
+	Any warranty is strictly refused and you cannot anticipate any financial or
+	technical support in case of malfunction or damage; see the copyright notice.
+
+	Feedback and comments are welcome. I will try to track reported problems and
+	fix bugs.
+
+
+7. History
+
+   • January 18, 2004
+	Initial release
+
+   • February 28, 2004
+	Bug fixed in rem(matrix,value): the result was stored back to the value causing
+	an assertion failure.
+
+   • June 20, 2004
+	Service release thanks to a bug reported by Tom Minka in exp(matrix): the output
+	was NaN for infinite input.
+
+	This bug fix made me think about affine inputs. They are now all handled as par-
+	ticular values for two reasons:
+	     1.	The output is well defined. In cases with more than one possible solution,
+		the function limit towards that value has been used.
+	     2.	The performance does not degreade but increases considerably (table look-
+		up instead of calculation). Any floating-point operation producing an
+		affine result tries to throw an exception. Even if the exception is masked
+		as within MATLAB, the processor calls up an internal assist slowing down
+		the computation to about 10%-20% of normal performance.
+
+   • May 2, 2005
+	Service release. Bux fixed in [c,s]=cis(matrix): the second output was set to an
+	invalid dimension. Version information included.
+
+   • Jun 28, 2007
+	Source code released under GNU LGPL version 2.1.
+
+   • May 12, 2008
+	Optimized routine for calculating the exponential according to
+	Agner Fog, "Optimizing subroutines in assembly language," at
+	Copenhagen University College of Engineering, www.agner.org.
+
+   • September 17, 2008
+	Dimensions of (empty matrix*scalar) matched on MATLAB's be-
+	haviour. Thanks to Paolo Bardella for reporting the issue.
+
+
+8. Download
+
+	Optimized MATLAB functions are available online at my webpage.
+	Summaries are also published at MATLAB central:
+
+	http://www.mathworks.com/matlabcentral/fileexchange/
+				loadAuthor.do?objectType=author&objectId=1093907
+
+
+9. Trademarks
+
+	MATLAB is a registered trademark of The MathWorks, Inc. Pentium II is a
+	registered trademark of Intel Corporation. Other product or brand names
+	are trademarks or registered trademarks of their respective holders.

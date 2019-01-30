@@ -1,0 +1,268 @@
+\documentclass[11pt,a4paper,twoside]{article}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{txfonts}
+\usepackage[dvips]{graphicx}
+\usepackage[ps2pdf,bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,pdfdisplaydoctitle=true,pdfstartview=FitH,plainpages=true]{hyperref}
+\hypersetup{
+	pdftitle={Implementation of elementary functions for MATLAB},
+	pdfauthor={Marcel Leutenegger}
+}
+
+% Declare additional math operators
+%
+\DeclareMathOperator{\acos}{acos}
+\DeclareMathOperator{\acosh}{acosh}
+\DeclareMathOperator{\asin}{asin}
+\DeclareMathOperator{\asinh}{asinh}
+\DeclareMathOperator{\atan}{atan}
+\DeclareMathOperator{\atanh}{atanh}
+\DeclareMathOperator{\func}{function}
+\DeclareMathOperator{\sqr}{sqrt}
+
+% Page layout:	1in = 6pc = 72pt
+%
+\hoffset=0.2cm
+\oddsidemargin=0cm
+\evensidemargin=0cm
+\textwidth=16cm
+\voffset=1.5cm
+\topmargin=0cm
+\headheight=12pt
+\headsep=22pt
+\textheight=22cm
+\parindent=0em
+\parskip=6pt
+
+\fancypagestyle{plain}{\fancyhf{}}
+\renewcommand{\headrulewidth}{0pt}
+\pagestyle{headings}
+\frenchspacing
+
+
+\title{Implementation of elementary functions of the\linebreak\textit{double}, \textit{single} and \textit{extended} class for MATLAB}
+\author{Copyright \copyright\ Marcel Leutenegger, 2003--2007\smallskip\\
+	\'Ecole Polytechnique F\'ed\'erale de Lausanne (EPFL)\\
+	Laboratoire d'Optique Biom\'edicale (LOB)\\
+	BM - Station 17\\
+	1015 Lausanne\\
+	Switzerland}
+\date{June 27, 2007}
+\begin{document}
+\maketitle
+\hspace{.05\textwidth}\parbox{.9\textwidth}{
+	This manual summarizes specific implementation details for the efficient computation of elementary MATLAB functions in case of complex floating point numbers.
+	In general, the limited precision of the representation of floating point values leads to round-off errors in sums and differences involved in complex calculations, which potentially degrades the accuracy of the final result.
+	This issue is briefly discussed and suitable implementations are proposed.
+}
+\vskip3em
+\hrule
+\vskip1em
+{\tt
+This library is free software; you can redistribute it and/or modify it under\newline
+the terms of the GNU Lesser General Public License as published by the Free\newline
+Software Foundation; version 2.1 of the License.
+
+This library is distributed in the hope that it will be useful, but WITHOUT ANY\newline
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A\newline
+PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License along\newline
+with this library; if not, write to the Free Software Foundation, Inc.,\newline
+51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.}
+\vskip1em
+\vskip4pt
+\hrule
+
+\clearpage
+\parskip=2pt
+\tableofcontents
+\parskip=6pt
+\clearpage
+
+\section{Introduction}
+Complex values $z$ are represented as two floating point numbers representing the real and the imaginary part, respectively:
+\begin{xalignat*}{2}
+	z	& = \Re{(z)} + i\Im{(z)} = a + ib	& \text{where}~i	& = \sqrt{-1}~\text{is the complex unit.}
+\intertext{The following abbreviations are used for function arguments and results:}
+	f	&~\text{is a finite real value} \in (-\infty,+\infty),	\\
+	n	&~\text{is a finite, negative real value} \in (-\infty,-0],	\\
+	p	&~\text{is a finite, positive real value} \in [+0,+\infty),	\\
+	r	&~\text{is a real value} \in [-\infty,+\infty],	\\
+	u	&~\text{is an undefined value (NAN) and}	\\
+	a	&~\text{is an affine value} \in \{\pm\infty,\pm\mathrm{NAN}\}.
+\end{xalignat*}
+The result of an undefined argument (NAN) is in general undefined.
+The rare exceptions are listed hereoff.
+Although the sign does not matter, the MATLAB representation of +NAN is effectively the IEEE representation of --NAN.
+
+
+\section{Basic functions}
+
+\subsection{Exponential}
+\begin{align}
+	\exp{(z)}	& = e^a\cos{(b)} + ie^a\sin{(b)}	\label{eqn:exp}
+\end{align}
+See also the comment on $\pi$ in section \ref{sec:transcendental} Transcendental functions.
+\begin{xalignat*}{2}
+	\textbf{Argum}	& \textbf{ent}	& \textbf{Resu}	& \textbf{lt}	\\
+	-\infty		&		& 0	\\
+	f		&		& r	\\
+	+\infty		&		& +\infty	\\
+	f + 		& if		& r +		& ir	\\
+	f +		& ia		& u +		& iu	\\
+	-\infty +	& if		& 0	\\
+	-\infty +	& ia		& 0	\\
+	+\infty +	& if		& a +		& ia	\\
+	+\infty\pm	& i\infty	& u +		& iu
+\end{xalignat*}
+
+\subsection{Natural logarithm}
+\begin{xalignat}{2}
+	\log{(z)}	& = \frac{1}{2}\log{(a^2 + b^2)} + i\atan{\frac{b}{a}}	\label{eqn:log}
+\intertext{The logarithm "compresses" the dynamic range of the input value rendering it sensible to a misproportion between $|a|$ and $|b|$.
+Such a misproportion leads to a round-off error in the sum $a^2 + b^2$ affecting the result.
+Over the full complex plane $\mathbb{R}\times i\mathbb{R}$, the logarithm is computed as}
+	\log{(z)}	& = \log{|a|} + \frac{1}{2}\log{\left(1 + \frac{b^2}{a^2}\right)} + i\atan{\frac{b}{a}}	& \forall~a^2	& > 2^9b^2	\\
+	\log{(z)}	& = \log{|b|} + \frac{1}{2}\log{\left(1 + \frac{a^2}{b^2}\right)} + i\atan{\frac{b}{a}}	& \forall~b^2	& > 2^9a^2
+\end{xalignat}
+The ratio is 2 to the power of the mantissa length difference (64bit -- 53bit) less 2 rounding bits, hence $2^9 = 512$ at \textit{double} precision.
+For \textit{single} and \textit{extended} precision the ratio is adapted accordingly.
+\begin{xalignat*}{2}
+	\textbf{Argum}	& \textbf{ent}	& \textbf{Resu}	& \textbf{lt}	\\
+	-\infty		&		& +\infty +	& i\pi	\\
+	n		&		& r +		& i\pi	\\
+	0		&		& -\infty	\\
+	p		&		& r	\\
+	+\infty		&		& +\infty	\\
+	r + 		& ir		& r +		& if
+\end{xalignat*}
+
+\subsection{Square root}
+In principle, the square root could be computed as
+\begin{xalignat}{3}
+	\sqr{(z)}	& = \sqrt{\frac{|z| + a}{2}} \pm i\sqrt{\frac{|z| - a}{2}}	&& \text{with}	& |z|	& = \sqrt{a^2 + b^2}	\label{eqn:sqrt}
+\intertext{But for \mbox{$|a| \gg |b|$}, the imaginary part would be truncated to zero.
+To maintain accuracy over the entire complex plane \mbox{$\mathbb{R} \times i\mathbb{R}$}, the square root is implemented as}
+	\sqr{(z)}	& = \sqrt{\frac{|z| + a}{2}} + i\frac{b}{2}\sqrt{\frac{2}{|z| + a}}	&&	& \forall~a	& > 0	\label{eqn:sqrtp}	\\
+	\sqr{(z)}	& = \frac{|b|}{2}\sqrt{\frac{2}{|z| - a}} \pm i\sqrt{\frac{|z| - a}{2}}	&& 	& \forall~a	& < 0	\label{eqn:sqrtn}
+\end{xalignat}
+The sign in equation \eqref{eqn:sqrtp} is automatically correct.
+In equation \eqref{eqn:sqrtn} it is adjusted accordingly.
+\begin{xalignat*}{2}
+	\textbf{Argum}	& \textbf{ent}	& \textbf{Resu}	& \textbf{lt}	\\
+	-\infty		&		& +		& i\infty	\\
+	n		&		&		& ip	\\
+	p		&		& p	\\
+	+\infty		&		& +\infty	\\
+	f + 		& if		& f +		& if	\\
+	f \pm		& i\infty	& +\infty \pm	& i\infty	\\
+	-\infty +	& if		& +		& i\infty	\\
+	+\infty +	& if		& +\infty	\\
+	\pm\infty \pm	& i\infty	& u +		& iu
+\end{xalignat*}
+
+
+\section{Transcendental functions}
+\label{sec:transcendental}
+Particular results of the transcendentals and their inverse functions will not be given explicitely hereoff.
+For affine arguments, they reply either by an undefined real or complex value or by
+\begin{align*}
+	\func{(\infty + i\infty)}	& = \lim_{z \rightarrow \infty + i\infty}{\func{(z)}}
+\end{align*}
+if this limit exists.
+
+\paragraph{Comment on $\pi$}
+The transcendental FPU instructions \textit{fcos}, \textit{fsin}, \textit{fsincos} and \textit{fptan} reduce their arguments by computing the $2\pi$-reminder.
+These FPU instructions use an internal representation of $\pi$ with a 66bit mantissa regardless of the precision setting.
+Normal floating point operations never exceed the 64bit mantissa in \textit{temporary real} format.
+
+To minimize the round-off error, the arguments for the transcendental FPU functions are explicitly reduced by taking the $2\pi$-reminder represented with a 53bit mantissa (\textit{double} precision).
+In combination with a prescaling by a \textit{temporary real} factor, the round-off error is reduced to less than 5.5E-20.
+This truncation and prescaling of the argument lowers the performance by 10\% to 15\%.
+
+\subsection{Cosine}
+\begin{align}
+	\cos{(z)}	& = \frac{e^{iz} + e^{-iz}}{2} = \frac{1}{2}\left(e^{-b} + e^b\right)\cos{(a)} + \frac{i}{2}\left(e^{-b} - e^b\right)\sin{(a)}
+\end{align}
+
+\subsection{Hyperbolic cosine}
+\begin{align}
+	\cosh{(z)}	& = \cos{(b - ia)} = \frac{1}{2}\left(e^a + e^{-a}\right)\cos{(b)} + \frac{i}{2}\left(e^a - e^{-a}\right)\sin{(b)}
+\end{align}
+
+\subsection{Sine}
+\begin{align}
+	\sin{(z)}	& = \frac{e^{iz} - e^{-iz}}{2i} = \frac{1}{2}\left(e^b + e^{-b}\right)\sin{(a)} + \frac{i}{2}\left(e^b - e^{-b}\right)\cos{(a)}
+\end{align}
+
+\subsection{Hyperbolic sine}
+\begin{align}
+	\sinh{(z)}	& = i\sin{(b - ia)} = \frac{1}{2}\left(e^a - e^{-a}\right)\cos{(b)} + \frac{i}{2}\left(e^a + e^{-a}\right)\sin{(b)}
+\end{align}
+
+\subsection{Tangent}
+\begin{align}
+	\tan{(z)}	& = \frac{\sin{(z)}}{\cos{(z)}} = \frac{4e^{2b}\cos{(a)}\sin{(a)} + i\left(e^{2b} + 1\right)\left(e^{2b} - 1\right)}{\left(\left(e^{2b} + 1\right)\cos{(a)}\right)^2 + \left(\left(e^{2b} - 1\right)\sin{(a)}\right)^2}
+\end{align}
+The tangent maintains accuracy up to an imaginary part $|b| \lesssim 373$.
+A larger $|b|$ causes either an overflow of $e^{2b}$ to infinity or a truncation of the real part of the result to zero when saving as \textit{double}.
+For a \textit{single} (\textit{extended}) result, the limit would be $|b| \lesssim 53~(5678)$.
+
+MATLAB R12 maintains accuracy for $|b| \lesssim 19$.
+
+\subsection{Hyperbolic tangent}
+\begin{align}
+	\tanh{(z)}	& = \frac{\sinh{(z)}}{\cosh{(z)}} = \frac{\left(e^{2a} + 1\right)\left(e^{2a} - 1\right) + i4e^{2a}\cos{(b)}\sin{(b)}}{\left(\left(e^{2a} + 1\right)\cos{(b)}\right)^2 + \left(\left(e^{2a} - 1\right)\sin{(b)}\right)^2}
+\end{align}
+The hyperbolic tangent maintains accuracy up to a real part $|a| \lesssim 373$.
+A larger $|a|$ causes either an overflow of $e^{2a}$ to infinity or a truncation of the imaginary part of the result to zero when saving as \textit{double}.
+For a \textit{single} (\textit{extended}) result, the limit would be $|b| \lesssim 53~(5678)$.
+
+MATLAB R12 maintains accuracy for $|a| \lesssim 20$.
+
+
+\clearpage
+\section{Inverse transcendental functions}
+The current implementations of these functions use equation \eqref{eqn:sqrt} for computing the square root and equation \eqref{eqn:log} for the logarithm.
+The number of addends involved would require numerous expressions for obtaining optimal accuracy in each case.
+Conditional branches to these expressions are unpredictable and would degrade the performance significantly.
+
+The accuracy is improved by computing with the absolute values $|a|$ and $|b|$ and by adjusting the result according to the signs of $a$ and $b$.
+
+\subsection{Inverse cosine}
+\begin{align}
+	\acos{(z)}	& = -i\log{\left(a + ib + \sqrt{a^2 - b^2 - 1 + 2iab}\right)}
+\end{align}
+The real part is adjusted according to the signs of $a$ and $b$.
+The imaginary part is always negative.
+
+\subsection{Inverse hyperbolic cosine}
+\begin{align}
+	\acosh{(z)}	& = \log{\left(a + ib + \sqrt{a^2 - b^2 - 1 + 2iab}\right)}
+\end{align}
+The imaginary part is adjusted according to the signs of $a$ and $b$.
+The real part is always positive.
+
+\subsection{Inverse sine}
+\begin{align}
+	\asin{(z)}	& = -i\log{\left(ia - b + \sqrt{1 - a^2 + b^2 - 2iab}\right)}
+\end{align}
+
+\subsection{Inverse hyperbolic sine}
+\begin{align}
+	\asinh{(z)}	& = \log{\left(a + ib + \sqrt{1 + a^2 - b^2 + 2iab}\right)}
+\end{align}
+
+\subsection{Inverse tangent}
+\begin{align}
+	\atan{(z)}	& = -\frac{i}{2}\log{\frac{1 - a^2 - b^2 + 2ia}{1 + a^2 + b^2 + 2b}}
+\end{align}
+
+\subsection{Inverse hyperbolic tangent}
+\begin{align}
+	\atanh{(z)}	& = -\frac{1}{2}\log{\frac{1 - a^2 - b^2 - 2ib}{1 + a^2 + b^2 + 2a}}
+\end{align}
+
+\end{document}

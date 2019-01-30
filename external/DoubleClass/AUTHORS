@@ -1,0 +1,24 @@
+Optimized double class functions for MATLAB on x86 computers.
+
+    This library is free software; you can redistribute it and/or modify it under
+    the terms of the GNU Lesser General Public License as published by the Free
+    Software Foundation; version 2.1 of the License.
+
+    This library is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+    PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License along
+    with this library; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+Copyright © Marcel Leutenegger, 2003-2008, École Polytechnique Fédérale de Lausanne (EPFL),
+Laboratoire d'Optique Biomédicale (LOB), BM - Station 17, 1015 Lausanne, Switzerland.
+
+ • Jan 18, 2004:	Initial release.
+ • Feb 28, 2004:	REM fixed.
+ • Jun 20, 2004:	Service release. EXP fixed, speed up for affine input.
+ • May  2, 2005:	Service release. CIS fixed.
+ • Jun 28, 2007:	Source code released under GNU LGPL version 2.1.
+ • Max 12, 2008:	Service release. Improved exponential performance.
