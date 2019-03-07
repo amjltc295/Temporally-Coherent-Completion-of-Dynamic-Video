@@ -26,4 +26,4 @@ end
 fprintf('Total Time:')
 clock - start_time
 fprintf('Error num:')
-error_num;
+error_num
